@@ -3,7 +3,9 @@ import numpy as np
 from PIL import Image, ImageTk
 
 
-import Usbhost # https://github.com/notiel/usbhost
+#import Usbhost # https://github.com/notiel/usbhost
+
+window = Tk()
 
 def to_rgb(h, s, v):
     hi = (h // 60) % 6
@@ -40,18 +42,55 @@ def to_rgb(h, s, v):
     b = round(b * 2.55)
     return r, g, b
 
-def draw_hue(c, w, h):
-    img =  ImageTk.PhotoImage(image=Image.fromarray(array))
+def draw_hue(w, h):
+    array = np.zeros((h,w,3), dtype=np.uint8)
     for i in range(w):
         hue = i/w * 360
         r,g,b = to_rgb(hue, 100, 100)
-        rgb = "#" + hex(r*256*256 + g*256 + b)[2:]
-        c.create_rectangle(50, 25, 150, 75, fill="blue")
+        array[:,i,0] = r
+        array[:,i,1] = g
+        array[:,i,2] = b
+    img =  ImageTk.PhotoImage(image=Image.fromarray(array, mode='RGB'))
+    canvas = Canvas(window,width=w,height=h)
+    canvas.create_image(0,0, image=img, anchor='nw')
+    canvas.image = img
+    return canvas
 
+def my_canvas(w, h):
+    array = np.zeros((h,w,3), dtype=np.uint8)
+    canvas = Canvas(window,width=w,height=h)
+    canvas.array = array
+    return canvas
 
+def update_s(canvas, h, v):
+    array = canvas.array
+    for i in range(w):
+        s = i/w * 100
+        r,g,b = to_rgb(h, s, v)
+        array[:,i,0] = r
+        array[:,i,1] = g
+        array[:,i,2] = b
+    img =  ImageTk.PhotoImage(image=Image.fromarray(array, mode='RGB'))
+    canvas.create_image(0,0, image=img, anchor='nw')
+    canvas.image = img
+    return canvas
 
-window = Tk()
+def update_v(canvas, h, s):
+    array = canvas.array
+    for i in range(w):
+        v = i/w * 100
+        r,g,b = to_rgb(h, s, v)
+        array[:,i,0] = r
+        array[:,i,1] = g
+        array[:,i,2] = b
+    img =  ImageTk.PhotoImage(image=Image.fromarray(array, mode='RGB'))
+    canvas.create_image(0,0, image=img, anchor='nw')
+    canvas.image = img
+    return canvas
+
 window.title("Colors")
-sl_H = Scale(window, variable = h)
+canvas = draw_hue(100, 10)
+canvas.pack()
+#sl_H = Scale(window, variable = h)
    
 window.mainloop()
