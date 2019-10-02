@@ -108,7 +108,7 @@ def update_v(i):
 window.title("Colors")
 h = [0,130,240,60]
 s = [100,100,100,100]
-v = [50,50,50,50]
+v = [100,100,100,100]
 canvases_hue = [draw_hue(*CANVAS_SIZE) for i in range(4)]
 canvases_s = [update_canvas(my_canvas(*CANVAS_SIZE), h[i], v[i], "s") for i in range(4)]
 canvases_v = [update_canvas(my_canvas(*CANVAS_SIZE), h[i], s[i], "v") for i in range(4)]
