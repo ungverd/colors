@@ -3,9 +3,12 @@ import numpy as np
 from PIL import Image, ImageTk
 
 
-#import Usbhost # https://github.com/notiel/usbhost
+import Usbhost # https://github.com/notiel/usbhost
 
 window = Tk()
+
+CANVAS_SIZE = (800, 10)
+houses = ["Гриффиндор", "Слизерин", "Рейвенкло", "Хаффлпафф"]
 
 def to_rgb(h, s, v):
     hi = (h // 60) % 6
@@ -62,11 +65,18 @@ def my_canvas(w, h):
     canvas.array = array
     return canvas
 
-def update_s(canvas, h, v):
+def update_canvas(canvas, h, other, typ):
     array = canvas.array
+    w = int(canvas.config()["width"][4])
     for i in range(w):
-        s = i/w * 100
-        r,g,b = to_rgb(h, s, v)
+        var = i/w * 100
+        if typ == "s":
+            val = other
+            sat = var
+        elif typ == "v":
+            sat = other
+            val = var
+        r,g,b = to_rgb(h, sat, val)
         array[:,i,0] = r
         array[:,i,1] = g
         array[:,i,2] = b
@@ -75,22 +85,54 @@ def update_s(canvas, h, v):
     canvas.image = img
     return canvas
 
-def update_v(canvas, h, s):
-    array = canvas.array
-    for i in range(w):
-        v = i/w * 100
-        r,g,b = to_rgb(h, s, v)
-        array[:,i,0] = r
-        array[:,i,1] = g
-        array[:,i,2] = b
-    img =  ImageTk.PhotoImage(image=Image.fromarray(array, mode='RGB'))
-    canvas.create_image(0,0, image=img, anchor='nw')
-    canvas.image = img
-    return canvas
+def update_h(i):
+    def inner(val):
+        #send command
+        h[i] = float(val)
+        update_canvas(canvases_s[i], h[i], v[i], "s")
+        update_canvas(canvases_v[i], h[i], s[i], "v")
+    return inner
+def update_s(i):
+    def inner(val):
+        #send command
+        s[i] = float(val)
+        update_canvas(canvases_v[i], h[i], s[i], "v")
+    return inner
+def update_v(i):
+    def inner(val):
+        #send command
+        v[i] = float(val)
+        update_canvas(canvases_s[i], h[i], v[i], "s")
+    return inner
 
 window.title("Colors")
-canvas = draw_hue(100, 10)
-canvas.pack()
-#sl_H = Scale(window, variable = h)
-   
+h = [0,130,240,60]
+s = [100,100,100,100]
+v = [50,50,50,50]
+canvases_hue = [draw_hue(*CANVAS_SIZE) for i in range(4)]
+canvases_s = [update_canvas(my_canvas(*CANVAS_SIZE), h[i], v[i], "s") for i in range(4)]
+canvases_v = [update_canvas(my_canvas(*CANVAS_SIZE), h[i], s[i], "v") for i in range(4)]
+
+scales_hue = [Scale(window, from_=0, to=360, orient=HORIZONTAL, resolution=0.1, length=CANVAS_SIZE[0], command = update_h(i)) for i in range(4)]
+scales_s =   [Scale(window, from_=0, to=100, orient=HORIZONTAL, resolution=0.1, length=CANVAS_SIZE[0], command = update_s(i)) for i in range(4)]
+scales_v =   [Scale(window, from_=0, to=100, orient=HORIZONTAL, resolution=0.1, length=CANVAS_SIZE[0], command = update_v(i)) for i in range(4)]
+
+
+
+labels = [Label(window, text=houses[i]) for i in range(4)]
+
+for i in range(4):
+
+    labels[i].pack()
+    scales_hue[i].set(h[i])
+    scales_hue[i].pack()
+    canvases_hue[i].pack()
+    scales_s[i].set(s[i])
+    scales_s[i].pack()
+    canvases_s[i].pack()
+    scales_v[i].set(v[i])
+    scales_v[i].pack()
+    canvases_v[i].pack()
+    Label(window, text='').pack()
+
 window.mainloop()
